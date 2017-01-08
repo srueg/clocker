@@ -2,50 +2,52 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import untangle
 import dotenv
+import logging
+import excel_helper
 
-from enum import Enum
-from openpyxl import load_workbook
-
-
-class EntryType(Enum):
-    MORNING_IN = 0
-    MORNING_OUT = 1
-    AFTERNOON_IN = 2
-    AFTERNOON_OUT = 3
+from datetime import date as sysdate
 
 
-def write_entry(date, time, type):
-    if type == EntryType.MORNING_IN:
-        print "Morning: " + time
-    elif type == EntryType.MORNING_OUT:
-        print "Noon: " + time
-    elif type == EntryType.AFTERNOON_IN:
-        print "Afternoon: " + time
-    elif type == EntryType.AFTERNOON_OUT:
-        print "Bye: " + time
-    else:
-        print "UUPs"
+logging.basicConfig(
+    format='%(asctime)s [%(levelname)s] - %(message)s', level=logging.DEBUG)
 
 dotenv.load()
 timestamps_file = os.environ.get("TIMESTAMPS_FILE")
 target_excel = os.environ.get("TARGET_EXCEL")
 
-print "Using timestamps file '{0}' and target excel '{1}'".format(timestamps_file, target_excel)
+logging.debug(
+    "Using timestamps file '%s' and target excel '%s'.", timestamps_file, target_excel)
 
 timestamps = untangle.parse(timestamps_file)
-wb = load_workbook(filename=target_excel)
-sheets = wb.get_sheet_names()
+excel = excel_helper.ExcelHelper(target_excel)
 
+all = False
+if "--all" in sys.argv:
+    logging.debug("Processing all days.")
+    all = True
+else:
+    logging.debug("Processing only today (%s)", str(sysdate.today()))
+
+found = False
 for day in timestamps.TimeList.Date:
     date = day["value"]
-    print "New day: " + date
-    i = 0
-    for stamp in day.Time:
-        time = stamp.cdata
-        write_entry(date, time, i)
-        i += 1
-        if i > 3:
-            break
-    print
+    if not all and date == str(sysdate.today()):
+        found = True
+        if not all:
+            logging.debug("Found stamps for today.")
+        if len(day.Time) > 4:
+            logging.warn("Too many stamps for day %s.", date)
+        else:
+            if len(day.Time) < 4:
+                logging.warn("Not enough stamps for day %s.", date)
+            i = 0
+            for stamp in day.Time:
+                time = stamp.cdata
+                excel.write_entry(date, time, i)
+                i += 1
+
+if not found and not all:
+    logging.warn("No stamps found today (%s).", str(sysdate.today()))
