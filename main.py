@@ -14,6 +14,13 @@ from datetime import date as sysdate
 logging.basicConfig(
     format='%(asctime)s [%(levelname)s] - %(message)s', level=logging.DEBUG)
 
+if any(x in sys.argv for x in ["--help", "-h"]):
+    print     '''
+    Usage:  --all [-a]  process all enries in timestamps file
+            --help [-h] show this help
+    '''
+    exit()
+
 dotenv.load()
 timestamps_file = os.environ.get("TIMESTAMPS_FILE")
 target_excel = os.environ.get("TARGET_EXCEL")
@@ -25,7 +32,7 @@ timestamps = untangle.parse(timestamps_file)
 excel = excel_helper.ExcelHelper(target_excel)
 
 all = False
-if "--all" in sys.argv:
+if any(x in sys.argv for x in ["--all", "-a"]):
     logging.debug("Processing all days.")
     all = True
 else:
