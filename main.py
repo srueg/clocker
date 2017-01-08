@@ -3,6 +3,7 @@
 
 import os
 import untangle
+import dotenv
 
 from enum import Enum
 from openpyxl import load_workbook
@@ -27,8 +28,11 @@ def write_entry(date, time, type):
     else:
         print "UUPs"
 
-timestamps_file = os.environ["TIMESTAMPS_FILE"]
-target_excel = os.environ["TARGET_EXCEL"]
+dotenv.load()
+timestamps_file = os.environ.get("TIMESTAMPS_FILE")
+target_excel = os.environ.get("TARGET_EXCEL")
+
+print "Using timestamps file '{0}' and target excel '{1}'".format(timestamps_file, target_excel)
 
 timestamps = untangle.parse(timestamps_file)
 wb = load_workbook(filename=target_excel)
