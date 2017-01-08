@@ -7,6 +7,7 @@ import untangle
 import dotenv
 import logging
 import excel_helper
+import datetime
 
 from datetime import date as sysdate
 
@@ -41,7 +42,7 @@ else:
 found = False
 for day in timestamps.TimeList.Date:
     date = day["value"]
-    if not all and date == str(sysdate.today()):
+    if all or date == str(sysdate.today()):
         found = True
         if not all:
             logging.debug("Found stamps for today.")
@@ -53,8 +54,12 @@ for day in timestamps.TimeList.Date:
             i = 0
             for stamp in day.Time:
                 time = stamp.cdata
-                excel.write_entry(date, time, i)
+                d = datetime.datetime.strptime(date, '%Y-%m-%d').date()
+                excel.write_entry(d, time, i)
                 i += 1
+
+if found:
+    excel.save(target_excel)
 
 if not found and not all:
     logging.warn("No stamps found today (%s).", str(sysdate.today()))
