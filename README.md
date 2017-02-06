@@ -6,7 +6,7 @@ Write xml timestamps to an excel sheet
 
 ## Usage:
 
-Set path to xml file in env var `$TIMESTAMPS_FILE`\
+Set path to xml file in env var `$TIMESTAMPS_FILE`
 Set path to excel file in env var `$TARGET_EXCEL`
 
 ```
