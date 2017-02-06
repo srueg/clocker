@@ -38,30 +38,30 @@ class ExcelHelper:
         cell = self.cell
         col = None
         time_value = datetime.datetime.strptime(time, '%H:%M').time()
-        time_double = float(str(time_value.hour) +
-                            "." + str(time_value.minute))
-        if type == EntryType.MORNING_IN:
+        time_dec = time_value.hour + round(time_value.minute / float(60), 2)
+        if type == EntryType.MORNING_IN.value:
             col = self.MORNING_IN_COL
-        elif type == EntryType.MORNING_OUT:
+        elif type == EntryType.MORNING_OUT.value:
             col = self.MORNING_OUT_COL
-        elif type == EntryType.AFTERNOON_IN:
+        elif type == EntryType.AFTERNOON_IN.value:
             col = self.AFTERNOON_IN_COL
-        elif type == EntryType.AFTERNOON_OUT:
+        elif type == EntryType.AFTERNOON_OUT.value:
             col = self.AFTERNOON_OUT_COL
         else:
-            logger.error("Unknown entry type on %s!", date)
+            logger.error("Unknown entry type '%d' on %s!", type, date)
 
         if not col is None:
-            sheet.cell(row=cell.row, column=col, value=time_double)
+            sheet.cell(row=cell.row, column=col, value=time_dec)
+            logger.debug("Wrote time '%.2f' to field '%s'", time_dec, cell)
 
     def find_sheet(self, date):
-        if not self.sheet is None and self.sheet[0] == date:
+        if not self.sheet is None and self.sheet[0].month == date.month:
             return self.sheet
         else:
-            name = self.get_month_name(date.month, "de_CH")
+            name = self.get_month_name(date.month, "de_CH.utf8")
+            y = str(date.year % 100)
+            logger.debug("Search sheet with name '%s' and year '%s'", name, y)
             for sheet_name in self.workbook.get_sheet_names():
-                y = str(date.year % 100)
-                logger.debug("Search name %s and year %s", name, y)
                 if sheet_name.startswith(name) and sheet_name.endswith(y):
                     logger.debug("Found sheet '%s'", sheet_name)
                     self.sheet = (date, self.workbook[sheet_name])
@@ -72,12 +72,12 @@ class ExcelHelper:
             return self.cell
         else:
             try:
+                logger.debug("Search cell with date '%s'", date)
                 for row in self.sheet[1].iter_rows(min_row=11, max_row=50, min_col=2, max_col=2):
                     for cell in row:
                         if not cell.value is None:
                             if cell.value.date() == date:
-                                logger.debug(
-                                    "Found cell (%s) for date (%s)", cell, date)
+                                logger.debug("Found cell (%s) for date (%s)", cell, date)
                                 self.cell = cell
                                 return self.cell
             except:
