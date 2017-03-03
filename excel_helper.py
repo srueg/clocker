@@ -80,8 +80,9 @@ class ExcelHelper:
                                 logger.debug("Found cell (%s) for date (%s)", cell, date)
                                 self.cell = cell
                                 return self.cell
-            except:
-                print cell
+                logger.error("Date %s not found!", date)
+            except Exception as ex:
+                logger.error("Error occured on cell '%s': %s", cell, ex)
 
     def get_month_name(self, month_no, locale):
         with TimeEncoding(locale) as encoding:
